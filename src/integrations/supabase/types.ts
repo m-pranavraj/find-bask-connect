@@ -14,16 +14,304 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      items: {
+        Row: {
+          area: string
+          category: Database["public"]["Enums"]["item_category"]
+          city: string
+          contact_method: string | null
+          created_at: string
+          date_found: string
+          description: string
+          expires_at: string
+          finder_id: string
+          id: string
+          image_urls: string[]
+          latitude: number | null
+          longitude: number | null
+          specific_location: string
+          status: Database["public"]["Enums"]["item_status"]
+          title: string
+          updated_at: string
+          views: number | null
+        }
+        Insert: {
+          area: string
+          category: Database["public"]["Enums"]["item_category"]
+          city: string
+          contact_method?: string | null
+          created_at?: string
+          date_found: string
+          description: string
+          expires_at?: string
+          finder_id: string
+          id?: string
+          image_urls?: string[]
+          latitude?: number | null
+          longitude?: number | null
+          specific_location: string
+          status?: Database["public"]["Enums"]["item_status"]
+          title: string
+          updated_at?: string
+          views?: number | null
+        }
+        Update: {
+          area?: string
+          category?: Database["public"]["Enums"]["item_category"]
+          city?: string
+          contact_method?: string | null
+          created_at?: string
+          date_found?: string
+          description?: string
+          expires_at?: string
+          finder_id?: string
+          id?: string
+          image_urls?: string[]
+          latitude?: number | null
+          longitude?: number | null
+          specific_location?: string
+          status?: Database["public"]["Enums"]["item_status"]
+          title?: string
+          updated_at?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_finder_id_fkey"
+            columns: ["finder_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          item_id: string
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          item_id: string
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          item_id?: string
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          items_claimed: number | null
+          items_found: number | null
+          phone: string | null
+          reputation_score: number | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          items_claimed?: number | null
+          items_found?: number | null
+          phone?: string | null
+          reputation_score?: number | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          items_claimed?: number | null
+          items_found?: number | null
+          phone?: string | null
+          reputation_score?: number | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          item_id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          item_id: string
+          rating: number
+          reviewee_id: string
+          reviewer_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          item_id?: string
+          rating?: number
+          reviewee_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewee_id_fkey"
+            columns: ["reviewee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_requests: {
+        Row: {
+          additional_proof_urls: string[] | null
+          admin_notes: string | null
+          claimant_id: string
+          created_at: string
+          id: string
+          identification_marks: string | null
+          item_id: string
+          photo_with_item_urls: string[] | null
+          purchase_proof_url: string | null
+          security_answers: Json | null
+          status: Database["public"]["Enums"]["verification_status"]
+          updated_at: string
+        }
+        Insert: {
+          additional_proof_urls?: string[] | null
+          admin_notes?: string | null
+          claimant_id: string
+          created_at?: string
+          id?: string
+          identification_marks?: string | null
+          item_id: string
+          photo_with_item_urls?: string[] | null
+          purchase_proof_url?: string | null
+          security_answers?: Json | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          updated_at?: string
+        }
+        Update: {
+          additional_proof_urls?: string[] | null
+          admin_notes?: string | null
+          claimant_id?: string
+          created_at?: string
+          id?: string
+          identification_marks?: string | null
+          item_id?: string
+          photo_with_item_urls?: string[] | null
+          purchase_proof_url?: string | null
+          security_answers?: Json | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_requests_claimant_id_fkey"
+            columns: ["claimant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "verification_requests_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_expired_items: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      item_category:
+        | "electronics"
+        | "wallets_purses"
+        | "keys"
+        | "bags"
+        | "documents"
+        | "jewelry"
+        | "clothing"
+        | "accessories"
+        | "other"
+      item_status: "available" | "claimed" | "verified" | "returned"
+      user_role: "user" | "admin"
+      verification_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +438,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      item_category: [
+        "electronics",
+        "wallets_purses",
+        "keys",
+        "bags",
+        "documents",
+        "jewelry",
+        "clothing",
+        "accessories",
+        "other",
+      ],
+      item_status: ["available", "claimed", "verified", "returned"],
+      user_role: ["user", "admin"],
+      verification_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
