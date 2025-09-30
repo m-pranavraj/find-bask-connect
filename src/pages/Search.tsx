@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ItemCard from "@/components/ItemCard";
@@ -13,57 +13,17 @@ import {
 } from "@/components/ui/select";
 import { Search as SearchIcon, Filter } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Search = () => {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Mock data - will be replaced with real data later
-  const mockItems = [
-    {
-      id: "1",
-      title: "iPhone 13 Pro",
-      description:
-        "Found a black iPhone 13 Pro with a cracked screen protector but the phone is in good condition.",
-      category: "Electronics",
-      location: "Waltair Junction, Vizag",
-      date: "4/15/2025",
-      image: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=800",
-      status: "available" as const,
-    },
-    {
-      id: "2",
-      title: "Brown Leather Wallet",
-      description:
-        "Found a brown leather wallet with some cards and cash. No ID visible.",
-      category: "Wallets & Purses",
-      location: "MG Road, Bangalore",
-      date: "4/12/2025",
-      image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=800",
-      status: "available" as const,
-    },
-    {
-      id: "3",
-      title: "Car Keys with Honda Remote",
-      description:
-        "Found a set of car keys with Honda remote and a small keychain.",
-      category: "Keys",
-      location: "Jubilee Hills, Hyderabad",
-      date: "4/10/2025",
-      image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
-      status: "claimed" as const,
-    },
-    {
-      id: "4",
-      title: "Black Backpack",
-      description:
-        "Found a black backpack containing books and a laptop near the metro station.",
-      category: "Bags",
-      location: "Connaught Place, Delhi",
-      date: "4/14/2025",
-      image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800",
-      status: "available" as const,
-    },
-  ];
+  const [category, setCategory] = useState("all");
+  const [location, setLocation] = useState("all");
+  const [timeFrame, setTimeFrame] = useState("all");
+  const [items, setItems] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const categories = [
     "All Categories",
@@ -73,23 +33,96 @@ const Search = () => {
     "Bags",
     "Documents",
     "Jewelry",
+    "Clothing",
     "Other",
   ];
 
-  const locations = [
-    "All Locations",
-    "Mumbai",
-    "Delhi",
-    "Bangalore",
-    "Hyderabad",
-    "Chennai",
-    "Kolkata",
-    "Pune",
-    "Ahmedabad",
-    "Vizag",
-  ];
+  useEffect(() => {
+    loadItems();
+  }, []);
 
-  const timeFrames = ["All Time", "Last 7 days", "Last 30 days", "Last 3 months"];
+  const loadItems = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*, profiles(full_name)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setItems(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading items",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    setIsLoading(true);
+    try {
+      let query = supabase
+        .from('items')
+        .select('*, profiles(full_name)')
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
+
+      if (category !== 'all') {
+        query = query.eq('category', category as any);
+      }
+
+      if (location !== 'all') {
+        query = query.eq('city', location);
+      }
+
+      if (timeFrame !== 'all') {
+        const now = new Date();
+        let dateLimit = new Date();
+        
+        switch (timeFrame) {
+          case 'last-7-days':
+            dateLimit.setDate(now.getDate() - 7);
+            break;
+          case 'last-30-days':
+            dateLimit.setDate(now.getDate() - 30);
+            break;
+          case 'last-3-months':
+            dateLimit.setMonth(now.getMonth() - 3);
+            break;
+        }
+
+        if (timeFrame !== 'all') {
+          query = query.gte('created_at', dateLimit.toISOString());
+        }
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setItems(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error searching items",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const availableItems = items.filter(item => item.status === 'available');
+  const claimedItems = items.filter(item => item.status === 'claimed' || item.status === 'returned');
 
   return (
     <div className="min-h-screen bg-background dark">
@@ -103,8 +136,7 @@ const Search = () => {
               Search <span className="gradient-text">Lost & Found Items</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Looking for something you lost? Search through items that have been
-              found.
+              Looking for something you lost? Search through items that have been found.
             </p>
           </div>
 
@@ -135,15 +167,16 @@ const Search = () => {
                   </div>
 
                   {/* Category Filter */}
-                  <Select defaultValue="all-categories">
+                  <Select value={category} onValueChange={setCategory}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((cat) => (
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {categories.slice(1).map((cat) => (
                         <SelectItem
                           key={cat}
-                          value={cat.toLowerCase().replace(/ /g, "-")}
+                          value={cat.toLowerCase().replace(/ /g, '_')}
                         >
                           {cat}
                         </SelectItem>
@@ -152,43 +185,36 @@ const Search = () => {
                   </Select>
 
                   {/* Location Filter */}
-                  <Select defaultValue="all-locations">
+                  <Select value={location} onValueChange={setLocation}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Locations" />
                     </SelectTrigger>
                     <SelectContent>
-                      {locations.map((loc) => (
-                        <SelectItem
-                          key={loc}
-                          value={loc.toLowerCase().replace(/ /g, "-")}
-                        >
-                          {loc}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="all">All Locations</SelectItem>
                     </SelectContent>
                   </Select>
 
                   {/* Time Filter */}
-                  <Select defaultValue="all-time">
+                  <Select value={timeFrame} onValueChange={setTimeFrame}>
                     <SelectTrigger>
                       <SelectValue placeholder="All Time" />
                     </SelectTrigger>
                     <SelectContent>
-                      {timeFrames.map((time) => (
-                        <SelectItem
-                          key={time}
-                          value={time.toLowerCase().replace(/ /g, "-")}
-                        >
-                          {time}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="all">All Time</SelectItem>
+                      <SelectItem value="last-7-days">Last 7 days</SelectItem>
+                      <SelectItem value="last-30-days">Last 30 days</SelectItem>
+                      <SelectItem value="last-3-months">Last 3 months</SelectItem>
                     </SelectContent>
                   </Select>
 
                   {/* Search Button */}
-                  <Button className="lg:col-span-3 btn-hero gap-2">
+                  <Button 
+                    className="lg:col-span-3 btn-hero gap-2"
+                    onClick={handleSearch}
+                    disabled={isLoading}
+                  >
                     <SearchIcon className="h-4 w-4" />
-                    Search
+                    {isLoading ? "Searching..." : "Search"}
                   </Button>
                 </div>
               </div>
@@ -199,19 +225,40 @@ const Search = () => {
                   <h2 className="text-2xl font-bold">
                     Available Items{" "}
                     <span className="text-muted-foreground text-lg font-normal">
-                      ({mockItems.filter((i) => i.status === "available").length}{" "}
-                      items)
+                      ({availableItems.length} items)
                     </span>
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {mockItems
-                    .filter((item) => item.status === "available")
-                    .map((item) => (
-                      <ItemCard key={item.id} {...item} />
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4 text-muted-foreground">Loading items...</p>
+                  </div>
+                ) : availableItems.length === 0 ? (
+                  <div className="text-center py-12 glass-card rounded-xl">
+                    <p className="text-xl text-muted-foreground">No items found</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Try adjusting your search filters or check back later
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {availableItems.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        id={item.id}
+                        title={item.title}
+                        description={item.description}
+                        category={item.category}
+                        location={`${item.area}, ${item.city}`}
+                        date={new Date(item.date_found).toLocaleDateString()}
+                        image={item.image_urls[0] || 'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=800'}
+                        status={item.status}
+                      />
                     ))}
-                </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -221,19 +268,37 @@ const Search = () => {
                   <h2 className="text-2xl font-bold">
                     Claimed Items{" "}
                     <span className="text-muted-foreground text-lg font-normal">
-                      ({mockItems.filter((i) => i.status === "claimed").length}{" "}
-                      items)
+                      ({claimedItems.length} items)
                     </span>
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {mockItems
-                    .filter((item) => item.status === "claimed")
-                    .map((item) => (
-                      <ItemCard key={item.id} {...item} />
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4 text-muted-foreground">Loading items...</p>
+                  </div>
+                ) : claimedItems.length === 0 ? (
+                  <div className="text-center py-12 glass-card rounded-xl">
+                    <p className="text-xl text-muted-foreground">No claimed items yet</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {claimedItems.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        id={item.id}
+                        title={item.title}
+                        description={item.description}
+                        category={item.category}
+                        location={`${item.area}, ${item.city}`}
+                        date={new Date(item.date_found).toLocaleDateString()}
+                        image={item.image_urls[0] || 'https://images.unsplash.com/photo-1556656793-08538906a9f8?w=800'}
+                        status={item.status}
+                      />
                     ))}
-                </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>

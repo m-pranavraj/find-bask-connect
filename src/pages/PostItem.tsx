@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LocationSearch from "@/components/LocationSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,16 +14,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, MapPin, Calendar, Image as ImageIcon } from "lucide-react";
+import { Upload, Calendar, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const PostItem = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // Form state
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState({ address: "", city: "", lat: 0, lng: 0 });
+  const [dateFound, setDateFound] = useState("");
+  const [contactMethod, setContactMethod] = useState("chat");
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -30,12 +47,87 @@ const PostItem = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Item Posted Successfully!",
-      description: "Your found item has been posted and is now searchable.",
-    });
+
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to post an item",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+
+    if (!location.city) {
+      toast({
+        title: "Location required",
+        description: "Please select a location using the search",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Upload image to storage
+      let imageUrl = '';
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('item-images')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('item-images')
+          .getPublicUrl(filePath);
+
+        imageUrl = publicUrl;
+      }
+
+      // Insert item into database
+      const { error: insertError } = await supabase
+        .from('items')
+        .insert({
+          title,
+          category: category as any,
+          description,
+          city: location.city,
+          area: location.address,
+          specific_location: location.address,
+          latitude: location.lat,
+          longitude: location.lng,
+          date_found: dateFound,
+          image_urls: imageUrl ? [imageUrl] : [],
+          contact_method: contactMethod,
+          finder_id: user.id,
+          status: 'available'
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: "Item Posted Successfully!",
+        description: "Your found item has been posted and is now searchable.",
+      });
+
+      navigate('/search');
+    } catch (error: any) {
+      toast({
+        title: "Error posting item",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const categories = [
@@ -98,6 +190,8 @@ const PostItem = () => {
                 <Input
                   id="itemName"
                   placeholder="e.g., iPhone 13 Pro, Black Wallet"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                   required
                 />
               </div>
@@ -105,13 +199,13 @@ const PostItem = () => {
               {/* Category */}
               <div className="space-y-2">
                 <Label htmlFor="category">Category *</Label>
-                <Select required>
+                <Select value={category} onValueChange={setCategory} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat.toLowerCase()}>
+                      <SelectItem key={cat} value={cat.toLowerCase().replace(/ /g, '_')}>
                         {cat}
                       </SelectItem>
                     ))}
@@ -126,36 +220,25 @@ const PostItem = () => {
                   id="description"
                   placeholder="Provide detailed description including color, size, brand, condition, and any distinguishing marks..."
                   rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   required
                 />
               </div>
 
-              {/* Location */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City *</Label>
-                  <Select required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {indianCities.map((city) => (
-                        <SelectItem key={city} value={city.toLowerCase()}>
-                          {city}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="area">Specific Area *</Label>
-                  <Input
-                    id="area"
-                    placeholder="e.g., Waltair Junction, MG Road"
-                    required
-                  />
-                </div>
+              {/* Location with Google Maps Search */}
+              <div className="space-y-2">
+                <Label htmlFor="location">Location (Search with Google Maps) *</Label>
+                <LocationSearch
+                  onLocationSelect={setLocation}
+                  placeholder="Search for mall, street, landmark, etc."
+                  value={location.address}
+                />
+                {location.city && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {location.address}, {location.city}
+                  </p>
+                )}
               </div>
 
               {/* Date Found */}
@@ -167,6 +250,8 @@ const PostItem = () => {
                     id="dateFound"
                     type="date"
                     className="pl-10"
+                    value={dateFound}
+                    onChange={(e) => setDateFound(e.target.value)}
                     required
                     max={new Date().toISOString().split("T")[0]}
                   />
@@ -222,7 +307,7 @@ const PostItem = () => {
                 <Label htmlFor="contactMethod">
                   Preferred Contact Method (Optional)
                 </Label>
-                <Select>
+                <Select value={contactMethod} onValueChange={setContactMethod}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select contact method" />
                   </SelectTrigger>
@@ -241,15 +326,21 @@ const PostItem = () => {
 
             {/* Submit Button */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button type="submit" size="lg" className="btn-hero flex-1 gap-2">
+              <Button 
+                type="submit" 
+                size="lg" 
+                className="btn-hero flex-1 gap-2"
+                disabled={isSubmitting}
+              >
                 <Upload className="h-5 w-5" />
-                Post Found Item
+                {isSubmitting ? "Posting..." : "Post Found Item"}
               </Button>
               <Button
                 type="button"
                 size="lg"
                 variant="outline"
                 className="flex-1"
+                onClick={() => navigate('/search')}
               >
                 Cancel
               </Button>
@@ -258,7 +349,7 @@ const PostItem = () => {
             {/* Info Box */}
             <div className="glass-card rounded-xl p-6 space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
+                <ImageIcon className="h-5 w-5 text-primary" />
                 Important Information
               </h3>
               <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
