@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,33 +8,73 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Lock, User, Phone, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Auth = () => {
   const { toast } = useToast();
+  const { user, signIn, signUp } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Login form state
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Signup form state
+  const [signupName, setSignupName] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPhone, setSignupPhone] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirm, setSignupConfirm] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+
+    const { error } = await signIn(loginEmail, loginPassword);
+
+    if (error) {
       toast({
-        title: "Login Successful!",
-        description: "Welcome back to Find & Bask",
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive"
       });
-    }, 1500);
+    }
+
+    setIsLoading(false);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    
+    if (signupPassword !== signupConfirm) {
       toast({
-        title: "Account Created!",
-        description: "Please verify your email to continue.",
+        title: "Passwords don't match",
+        description: "Please make sure your passwords match",
+        variant: "destructive"
       });
-    }, 1500);
+      return;
+    }
+
+    setIsLoading(true);
+
+    const { error } = await signUp(signupEmail, signupPassword, signupName, signupPhone);
+
+    if (error) {
+      toast({
+        title: "Signup Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -71,6 +111,8 @@ const Auth = () => {
                         type="email"
                         placeholder="your@email.com"
                         className="pl-10"
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
                         required
                       />
                     </div>
@@ -85,6 +127,8 @@ const Auth = () => {
                         type="password"
                         placeholder="••••••••"
                         className="pl-10"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
                         required
                       />
                     </div>
@@ -125,6 +169,8 @@ const Auth = () => {
                         type="text"
                         placeholder="John Doe"
                         className="pl-10"
+                        value={signupName}
+                        onChange={(e) => setSignupName(e.target.value)}
                         required
                       />
                     </div>
@@ -139,13 +185,15 @@ const Auth = () => {
                         type="email"
                         placeholder="your@email.com"
                         className="pl-10"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Phone Number</Label>
+                    <Label htmlFor="signup-phone">Phone Number (Optional)</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -153,12 +201,10 @@ const Auth = () => {
                         type="tel"
                         placeholder="+91 98765 43210"
                         className="pl-10"
-                        required
+                        value={signupPhone}
+                        onChange={(e) => setSignupPhone(e.target.value)}
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      OTP verification will be sent to this number
-                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -170,7 +216,10 @@ const Auth = () => {
                         type="password"
                         placeholder="••••••••"
                         className="pl-10"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
                         required
+                        minLength={6}
                       />
                     </div>
                   </div>
@@ -184,7 +233,10 @@ const Auth = () => {
                         type="password"
                         placeholder="••••••••"
                         className="pl-10"
+                        value={signupConfirm}
+                        onChange={(e) => setSignupConfirm(e.target.value)}
                         required
+                        minLength={6}
                       />
                     </div>
                   </div>
