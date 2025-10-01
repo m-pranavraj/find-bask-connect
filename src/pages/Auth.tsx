@@ -9,6 +9,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Mail, Lock, User, Phone, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  password: z.string().min(6, "Password must be at least 6 characters")
+});
+
+const signupSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name is too long"),
+  email: z.string().email("Invalid email address").min(1, "Email is required"),
+  phone: z.string().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").max(100, "Password is too long"),
+  confirmPassword: z.string().min(6, "Password must be at least 6 characters")
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"]
+});
 
 const Auth = () => {
   const { toast } = useToast();
@@ -35,46 +52,82 @@ const Auth = () => {
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    const { error } = await signIn(loginEmail, loginPassword);
-
-    if (error) {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive"
+    try {
+      const validated = loginSchema.parse({
+        email: loginEmail.trim(),
+        password: loginPassword
       });
-    }
 
-    setIsLoading(false);
+      setIsLoading(true);
+      const { error } = await signIn(validated.email, validated.password);
+
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.issues[0].message,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignup = async (e: FormEvent) => {
     e.preventDefault();
-    
-    if (signupPassword !== signupConfirm) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure your passwords match",
-        variant: "destructive"
+
+    try {
+      const validated = signupSchema.parse({
+        name: signupName,
+        email: signupEmail.trim(),
+        phone: signupPhone.trim() || undefined,
+        password: signupPassword,
+        confirmPassword: signupConfirm
       });
-      return;
+
+      setIsLoading(true);
+      const { error } = await signUp(validated.email, validated.password, validated.name, validated.phone);
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast({
+            title: "Account already exists",
+            description: "Please login with your existing account.",
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: error.message,
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Account created successfully!",
+          description: "You can now start posting and claiming items.",
+        });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.issues[0].message,
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(true);
-
-    const { error } = await signUp(signupEmail, signupPassword, signupName, signupPhone);
-
-    if (error) {
-      toast({
-        title: "Signup Failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-
-    setIsLoading(false);
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ItemCard from "@/components/ItemCard";
+import LocationSearch from "@/components/LocationSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +21,7 @@ const Search = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [category, setCategory] = useState("all");
-  const [location, setLocation] = useState("all");
+  const [locationFilter, setLocationFilter] = useState({ address: "", city: "", lat: 0, lng: 0 });
   const [timeFrame, setTimeFrame] = useState("all");
   const [items, setItems] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,8 +81,8 @@ const Search = () => {
         query = query.eq('category', category as any);
       }
 
-      if (location !== 'all') {
-        query = query.eq('city', location);
+      if (locationFilter.city) {
+        query = query.eq('city', locationFilter.city);
       }
 
       if (timeFrame !== 'all') {
@@ -184,15 +185,30 @@ const Search = () => {
                     </SelectContent>
                   </Select>
 
-                  {/* Location Filter */}
-                  <Select value={location} onValueChange={setLocation}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Locations" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Locations</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {/* Location Filter with Google Maps */}
+                  <div className="space-y-2">
+                    <LocationSearch
+                      onLocationSelect={setLocationFilter}
+                      placeholder="Filter by location (mall, city, etc.)"
+                      value={locationFilter.address}
+                    />
+                    {locationFilter.city && (
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">
+                          Filtering: {locationFilter.city}
+                        </p>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setLocationFilter({ address: "", city: "", lat: 0, lng: 0 })}
+                          className="text-xs h-6"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Time Filter */}
                   <Select value={timeFrame} onValueChange={setTimeFrame}>
