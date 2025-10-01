@@ -15,7 +15,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const Navigation = () => {
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved ? saved === 'dark' : true;
+  });
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -27,6 +30,8 @@ const Navigation = () => {
   }, []);
 
   useEffect(() => {
+    const theme = isDark ? 'dark' : 'light';
+    localStorage.setItem('theme', theme);
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
 
