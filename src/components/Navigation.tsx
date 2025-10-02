@@ -58,7 +58,7 @@ const Navigation = () => {
               <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full group-hover:bg-primary/40 transition-all" />
             </div>
             <span className="text-xl md:text-2xl font-bold gradient-text">
-              Find & Bask
+              Lost and Found
             </span>
           </Link>
 

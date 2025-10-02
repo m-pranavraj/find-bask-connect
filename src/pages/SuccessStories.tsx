@@ -61,7 +61,7 @@ const SuccessStories = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="pt-24 pb-20">

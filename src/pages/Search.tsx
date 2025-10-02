@@ -126,7 +126,7 @@ const Search = () => {
   const claimedItems = items.filter(item => item.status === 'claimed' || item.status === 'returned');
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       <div className="pt-24 pb-20">

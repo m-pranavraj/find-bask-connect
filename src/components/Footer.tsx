@@ -25,7 +25,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-2 group">
               <Search className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" />
-              <span className="text-2xl font-bold gradient-text">Find & Bask</span>
+              <span className="text-2xl font-bold gradient-text">Lost and Found</span>
             </Link>
             <p className="text-muted-foreground text-sm">
               Reuniting people with their belongings across India. Building a more helpful community together.
@@ -86,7 +86,7 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-2 text-sm text-muted-foreground">
                 <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <span>support@findandbask.in</span>
+                <span>support@lostandfound.in</span>
               </li>
               <li className="flex items-start space-x-2 text-sm text-muted-foreground">
                 <Phone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
@@ -104,7 +104,7 @@ const Footer = () => {
         <div className="mt-12 pt-8 border-t border-border/50">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-sm text-muted-foreground">
-              © 2025 Find & Bask. All rights reserved.
+              © 2025 Lost and Found. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground">
               Made with ❤️ for India

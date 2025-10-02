@@ -43,7 +43,7 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background dark">
+    <div className="min-h-screen bg-background">
       <Navigation />
 
       {/* Hero Section */}
@@ -125,7 +125,7 @@ const Index = () => {
               Simple <span className="gradient-text">Process</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Find & Bask makes it easy to connect lost items with their owners
+              Lost and Found makes it easy to connect lost items with their owners
               through a simple process.
             </p>
           </div>
