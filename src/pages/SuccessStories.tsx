@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import { Star, Quote, Heart } from "lucide-react";
 
 const SuccessStories = () => {
@@ -8,8 +9,8 @@ const SuccessStories = () => {
       name: "Priya Sharma",
       location: "Mumbai",
       item: "Diamond Wedding Ring",
-      story:
-        "I lost my wedding ring at a beach in Mumbai and thought I'd never see it again. Within 2 days of posting on Find & Bask, someone found it! The verification process gave me confidence, and the finder was incredibly helpful. This platform is a blessing!",
+        story:
+          "I lost my wedding ring at a beach in Mumbai and thought I'd never see it again. Within 2 days of posting on Lost and Found, someone found it! The verification process gave me confidence, and the finder was incredibly helpful. This platform is a blessing!",
       image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400",
       rating: 5,
     },
@@ -35,8 +36,8 @@ const SuccessStories = () => {
       name: "Vikram Patel",
       location: "Hyderabad",
       item: "iPhone with Family Photos",
-      story:
-        "Lost my iPhone with irreplaceable family photos at a metro station. Posted on Find & Bask and someone had already uploaded it! The platform made the return process smooth and secure. Highly recommended!",
+        story:
+          "Lost my iPhone with irreplaceable family photos at a metro station. Posted on Lost and Found and someone had already uploaded it! The platform made the return process smooth and secure. Highly recommended!",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
       rating: 5,
     },
@@ -44,8 +45,8 @@ const SuccessStories = () => {
       name: "Sneha Reddy",
       location: "Chennai",
       item: "Car Keys with Documents",
-      story:
-        "Lost my car keys with important documents. A kind soul found them and posted on Find & Bask. The verification process was thorough but not complicated. Got everything back safely!",
+        story:
+          "Lost my car keys with important documents. A kind soul found them and posted on Lost and Found. The verification process was thorough but not complicated. Got everything back safely!",
       image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=400",
       rating: 5,
     },
@@ -53,15 +54,45 @@ const SuccessStories = () => {
       name: "Arjun Singh",
       location: "Pune",
       item: "Backpack with Laptop",
-      story:
-        "Forgot my backpack in a cafe. The staff posted it on Find & Bask. The location-based search made it super easy to find. Retrieved my bag with all contents intact. Amazing platform!",
+        story:
+          "Forgot my backpack in a cafe. The staff posted it on Lost and Found. The location-based search made it super easy to find. Retrieved my bag with all contents intact. Amazing platform!",
       image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400",
       rating: 5,
     },
   ];
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Success Stories - Lost and Found",
+    "description": "Real testimonials from people who successfully reunited with their lost items",
+    "review": stories.map(story => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": story.name
+      },
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": story.rating,
+        "bestRating": 5
+      },
+      "itemReviewed": {
+        "@type": "Service",
+        "name": "Lost and Found Platform"
+      },
+      "reviewBody": story.story
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Success Stories - Real People Reunited with Lost Items"
+        description="Read inspiring success stories of people who found their lost items through our platform. Over 5,000 items reunited across India with verified reviews and ratings."
+        keywords="lost and found success stories, item recovery testimonials, found item reviews, lost belongings reunited, success stories india"
+        structuredData={structuredData}
+      />
       <Navigation />
 
       <div className="pt-24 pb-20">
@@ -76,7 +107,7 @@ const SuccessStories = () => {
               Success <span className="gradient-text">Stories</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Read how Find & Bask has helped thousands reunite with their
+              Read how Lost and Found has helped thousands reunite with their
               belongings across India
             </p>
           </div>

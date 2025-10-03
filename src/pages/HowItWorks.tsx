@@ -1,5 +1,6 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import {
   Upload,
   Search,
@@ -86,8 +87,32 @@ const HowItWorks = () => {
     },
   ];
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Reunite with Lost Items",
+    "description": "Step-by-step guide on how to find and return lost items through our secure platform",
+    "step": steps.map((step, index) => ({
+      "@type": "HowToStep",
+      "position": index + 1,
+      "name": step.title,
+      "text": step.description,
+      "itemListElement": step.details.map((detail, i) => ({
+        "@type": "HowToDirection",
+        "position": i + 1,
+        "text": detail
+      }))
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="How It Works - Lost and Found Reunification Process"
+        description="Learn how to post found items, search for lost belongings, verify ownership, and securely return items through our 6-step process. Complete guide to using our platform."
+        keywords="how to find lost items, how to post found items, lost and found process, item verification, secure item return, lost item recovery guide"
+        structuredData={structuredData}
+      />
       <Navigation />
 
       <div className="pt-24 pb-20">
@@ -98,7 +123,7 @@ const HowItWorks = () => {
               How <span className="gradient-text">It Works</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Find & Bask makes it easy to connect lost items with their owners
+            Lost and Found makes it easy to connect lost items with their owners
               through a simple, secure process
             </p>
           </div>

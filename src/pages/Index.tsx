@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import {
   Search,
   Upload,
@@ -42,8 +43,27 @@ const Index = () => {
     { icon: Star, value: "4.9/5", label: "User Rating" },
   ];
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Lost and Found",
+    "url": "https://yoursite.lovable.app",
+    "description": "Reuniting people with their lost belongings across India through a secure verification platform",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://yoursite.lovable.app/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Lost and Found - Reunite with Your Belongings in India"
+        description="Connect with people who found your lost items or report items you found. Building a more helpful community across India with secure verification."
+        keywords="lost and found india, lost items india, found items, reunite belongings, lost property, found property, secure verification, lost wallet, lost phone, lost bag"
+        structuredData={structuredData}
+      />
       <Navigation />
 
       {/* Hero Section */}
@@ -97,20 +117,20 @@ const Index = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 md:py-16 border-y border-border/50">
+      <section className="py-16 md:py-20 border-y border-border/50 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {stats.map((stat, index) => (
               <div
                 key={index}
-                className="text-center space-y-2 animate-fade-in"
+                className="flex flex-col items-center justify-center space-y-3 p-4 rounded-lg hover:bg-background/50 transition-colors animate-fade-in"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <stat.icon className="h-8 w-8 text-primary mx-auto" />
-                <div className="text-3xl md:text-4xl font-bold gradient-text">
+                <stat.icon className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+                <div className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
                   {stat.value}
                 </div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
+                <div className="text-xs md:text-sm text-muted-foreground font-medium">{stat.label}</div>
               </div>
             ))}
           </div>

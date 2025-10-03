@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import ItemCard from "@/components/ItemCard";
 import LocationSearch from "@/components/LocationSearch";
 import { Button } from "@/components/ui/button";
@@ -125,8 +126,21 @@ const Search = () => {
   const availableItems = items.filter(item => item.status === 'available');
   const claimedItems = items.filter(item => item.status === 'claimed' || item.status === 'returned');
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "SearchResultsPage",
+    "name": "Search Lost and Found Items",
+    "description": "Search for lost items across India by location, category, and time frame"
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Search Lost & Found Items - Find Your Lost Belongings"
+        description="Search for lost items that have been found across India. Filter by location, category, and date to find your lost belongings quickly and securely."
+        keywords="search lost items, find lost items, lost and found search, search found items india, find lost belongings, lost item recovery"
+        structuredData={structuredData}
+      />
       <Navigation />
 
       <div className="pt-24 pb-20">

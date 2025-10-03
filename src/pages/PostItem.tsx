@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 import LocationSearch from "@/components/LocationSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,6 +167,11 @@ const PostItem = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO 
+        title="Post Found Item - Help Reunite Someone with Their Belongings"
+        description="Found a lost item? Post details, location, and photos to help reunite it with the owner. Secure verification process ensures items return to rightful owners."
+        keywords="post found item, report found item, found item listing, lost and found post, help return lost items, found property report"
+      />
       <Navigation />
 
       <div className="pt-24 pb-20">
