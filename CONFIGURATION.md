@@ -4,7 +4,7 @@ This guide will help you configure all the necessary services and APIs to make y
 
 ## 🚀 Quick Start Checklist
 
-- [ ] Configure Google Maps API
+- [x] LocationIQ API (Already Configured)
 - [ ] Set up Google OAuth (Sign in with Google)
 - [ ] Configure Email Authentication
 - [ ] Create First Admin User
@@ -12,56 +12,42 @@ This guide will help you configure all the necessary services and APIs to make y
 
 ---
 
-## 1. Google Maps API Configuration
+## 1. LocationIQ API Configuration ✅ (Already Configured)
 
-The location search feature requires Google Maps Places API.
+The location search functionality uses LocationIQ API for address autocomplete and geocoding.
 
-### Steps:
+### Current Configuration:
+- **API Key**: `pk.96a5bf877c32cb04ca7ebfdd8b613705` ✅ Already added
+- **Location**: `src/components/LocationSearch.tsx`
+- **Region**: Restricted to India (IN)
+- **Features**: Autocomplete, geocoding, reverse geocoding
 
-1. **Go to Google Cloud Console**
-   - Visit: https://console.cloud.google.com/
+### About LocationIQ:
+LocationIQ provides location-based services including:
+- Address autocomplete (5 suggestions per search)
+- Geocoding (convert addresses to coordinates)
+- Search limited to India for better relevancy
+- Deduplication of results automatically
 
-2. **Create a New Project** (or select existing)
-   - Click "Select a Project" → "New Project"
-   - Name it: "Lost and Found"
-   - Click "Create"
+### Free Tier Includes:
+- ✅ 5,000 requests per day
+- ✅ No credit card required
+- ✅ No billing setup needed
 
-3. **Enable Required APIs**
-   - Go to "APIs & Services" → "Library"
-   - Search and enable:
-     - ✅ **Places API**
-     - ✅ **Maps JavaScript API**
-     - ✅ **Geocoding API**
+### Optional: Use Your Own API Key
 
-4. **Create API Key**
-   - Go to "APIs & Services" → "Credentials"
-   - Click "Create Credentials" → "API Key"
-   - Copy the API key
+If you need more requests or want your own key:
 
-5. **Restrict API Key** (Important for security)
-   - Click on your API key name
-   - Under "API restrictions":
-     - Select "Restrict key"
-     - Choose: Places API, Maps JavaScript API, Geocoding API
-   - Under "Application restrictions":
-     - Select "HTTP referrers (web sites)"
-     - Add your domains:
-       ```
-       https://yoursite.lovable.app/*
-       https://yourprojectid.lovable.app/*
-       http://localhost:5173/*
-       ```
-   - Click "Save"
+1. **Sign up**: Visit https://my.locationiq.com/
+2. **Get API Key**: Copy from dashboard
+3. **Update Code**: Replace key in `src/components/LocationSearch.tsx` (line 30)
+   ```typescript
+   const LOCATIONIQ_API_KEY = 'your_new_api_key_here';
+   ```
 
-6. **Add to Your Project**
-   - **In Lovable Project**: 
-     - Go to Project Settings → Secrets
-     - Add new secret: `VITE_GOOGLE_MAPS_API_KEY`
-     - Paste your API key
-   - **OR manually** add to `.env` file:
-     ```env
-     VITE_GOOGLE_MAPS_API_KEY=your_api_key_here
-     ```
+### API Dashboard:
+- View usage: https://my.locationiq.com/dashboard/
+- Documentation: https://locationiq.com/docs
 
 ---
 
@@ -247,7 +233,7 @@ Replace placeholder URLs with your actual domain throughout the project.
 
 Before going to production, ensure:
 
-- [ ] Google Maps API key is restricted to your domains only
+- [x] LocationIQ API configured and working
 - [ ] OAuth redirect URIs only include your domains (remove localhost)
 - [ ] Email confirmation is enabled (disable auto-confirm)
 - [ ] SMTP is configured for sending emails
@@ -307,10 +293,11 @@ Your project uses these main tables:
 ## 🆘 Troubleshooting
 
 ### Location Search Not Working
-- Verify Google Maps API key is set correctly
-- Check that Places API is enabled in Google Cloud
-- Check browser console for errors
-- Ensure API key is not restricted to wrong domains
+- Check browser console for API errors
+- Verify internet connection is working
+- Ensure LocationIQ API key is valid
+- Check if daily request limit (5,000) was reached
+- Try using your own LocationIQ API key if needed
 
 ### Google Sign-In Not Working
 - Verify OAuth credentials in Lovable Cloud backend
@@ -341,7 +328,8 @@ Your project uses these main tables:
 
 - **Lovable Documentation**: https://docs.lovable.dev/
 - **Lovable Discord Community**: https://discord.com/channels/1119885301872070706/1280461670979993613
-- **Google Maps API Docs**: https://developers.google.com/maps/documentation
+- **LocationIQ Documentation**: https://locationiq.com/docs
+- **LocationIQ Dashboard**: https://my.locationiq.com/dashboard/
 - **Google OAuth Docs**: https://developers.google.com/identity/protocols/oauth2
 
 ---
