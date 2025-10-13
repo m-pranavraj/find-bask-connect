@@ -6,9 +6,11 @@ This guide will help you configure all the necessary services and APIs to make y
 
 - [x] LocationIQ API (Already Configured)
 - [ ] Set up Google OAuth (Sign in with Google)
-- [ ] Configure Email Authentication
+- [ ] Configure Email Authentication  
 - [ ] Create First Admin User
 - [ ] Update Site URLs
+- [ ] Optional: Configure Twilio SMS
+- [x] Organization Multi-Tenancy (Live)
 
 ---
 
@@ -321,6 +323,84 @@ Your project uses these main tables:
 - Verify you added your user to `user_roles` table
 - Log out and log back in
 - Check browser console for role-related errors
+
+---
+
+## 6. SMS Notifications (Optional)
+
+For claim approval/rejection notifications via SMS, you'll need a Twilio account:
+
+### Setup Steps:
+
+1. **Create Twilio Account:**
+   - Go to [https://www.twilio.com/try-twilio](https://www.twilio.com/try-twilio)
+   - Sign up for a free trial account
+   - Get $15 in free credit for testing
+
+2. **Get Your Credentials:**
+   - Account SID: Found in your Twilio Console
+   - Auth Token: Found in your Twilio Console
+   - Phone Number: Get a phone number from Twilio Console
+
+3. **Add Secrets to Lovable Cloud:**
+   - Click "View Backend" button above
+   - Go to **Database** → **Edge Functions** → **Secrets**
+   - Add these three secrets:
+     ```
+     TWILIO_ACCOUNT_SID=your_account_sid
+     TWILIO_AUTH_TOKEN=your_auth_token
+     TWILIO_PHONE_NUMBER=+1234567890
+     ```
+
+4. **How It Works:**
+   - When a finder approves a claim, an SMS is automatically sent to the claimant
+   - SMS includes item details and next steps
+   - If Twilio is not configured, the system still works but without SMS
+
+**Note:** SMS is optional. The core functionality works without it!
+
+---
+
+## 7. Organization Registration & Multi-Tenancy
+
+The platform now supports multi-tenant organizations (malls, colleges, universities):
+
+### Features:
+- Organizations can register through `/organizations` page
+- Admin approval required for new organizations
+- Location-based access control (GPS radius)
+- Separate item databases per organization
+- Public items remain accessible to everyone
+
+### Admin Workflow:
+1. Organization submits registration at `/organizations`
+2. Admin reviews in `/admin` dashboard
+3. Admin verifies organization details
+4. Admin approves and creates organization admin
+5. Organization can now post items restricted to their location
+
+### How It Works:
+- **Public Items:** No organization_id → visible to everyone
+- **Organization Items:** Have organization_id → visible only to org members/admins
+- **Location Verification:** Users must be within org's GPS radius to access items
+- **Data Isolation:** Each organization has separate item database
+
+### Access Control:
+- Public users: See only public items
+- Organization admins: See their org's items + public items
+- Global admins: See everything
+
+### User Journey:
+1. **For Organizations:**
+   - Register at `/organizations`
+   - Wait for admin approval
+   - Get org admin access
+   - Post items visible only to your community
+
+2. **For Public Users:**
+   - Browse public items freely
+   - No organization required
+   - Post public items visible to everyone
 
 ---
 

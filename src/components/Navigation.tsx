@@ -39,6 +39,7 @@ const Navigation = () => {
     { path: "/", label: "Home" },
     { path: "/post-item", label: "Post Found Item" },
     { path: "/search", label: "Search Lost Items" },
+    { path: "/organizations", label: "Organizations" },
     { path: "/how-it-works", label: "How It Works" },
     { path: "/success-stories", label: "Success Stories" },
   ];
@@ -93,6 +94,12 @@ const Navigation = () => {
 
             {user ? (
               <>
+                <Link to="/my-finds">
+                  <Button variant="outline" className="gap-2">
+                    <Search className="h-4 w-4" />
+                    <span className="hidden sm:inline">My Finds</span>
+                  </Button>
+                </Link>
                 {isAdmin && (
                   <Link to="/admin">
                     <Button variant="outline" className="gap-2">

@@ -29,6 +29,7 @@ export type Database = {
           image_urls: string[]
           latitude: number | null
           longitude: number | null
+          organization_id: string | null
           specific_location: string
           status: Database["public"]["Enums"]["item_status"]
           title: string
@@ -49,6 +50,7 @@ export type Database = {
           image_urls?: string[]
           latitude?: number | null
           longitude?: number | null
+          organization_id?: string | null
           specific_location: string
           status?: Database["public"]["Enums"]["item_status"]
           title: string
@@ -69,6 +71,7 @@ export type Database = {
           image_urls?: string[]
           latitude?: number | null
           longitude?: number | null
+          organization_id?: string | null
           specific_location?: string
           status?: Database["public"]["Enums"]["item_status"]
           title?: string
@@ -81,6 +84,13 @@ export type Database = {
             columns: ["finder_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -136,6 +146,95 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      organization_admins: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_admins_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          address: string
+          city: string
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          latitude: number | null
+          logo_url: string | null
+          longitude: number | null
+          name: string
+          radius_meters: number | null
+          require_location_verification: boolean | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          city: string
+          contact_email: string
+          contact_phone: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name: string
+          radius_meters?: number | null
+          require_location_verification?: boolean | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          city?: string
+          contact_email?: string
+          contact_phone?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          latitude?: number | null
+          logo_url?: string | null
+          longitude?: number | null
+          name?: string
+          radius_meters?: number | null
+          require_location_verification?: boolean | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -251,6 +350,7 @@ export type Database = {
           additional_proof_urls: string[] | null
           admin_notes: string | null
           claimant_id: string
+          claimant_phone: string | null
           created_at: string
           id: string
           identification_marks: string | null
@@ -258,6 +358,8 @@ export type Database = {
           photo_with_item_urls: string[] | null
           purchase_proof_url: string | null
           security_answers: Json | null
+          sms_sent: boolean | null
+          sms_sent_at: string | null
           status: Database["public"]["Enums"]["verification_status"]
           updated_at: string
         }
@@ -265,6 +367,7 @@ export type Database = {
           additional_proof_urls?: string[] | null
           admin_notes?: string | null
           claimant_id: string
+          claimant_phone?: string | null
           created_at?: string
           id?: string
           identification_marks?: string | null
@@ -272,6 +375,8 @@ export type Database = {
           photo_with_item_urls?: string[] | null
           purchase_proof_url?: string | null
           security_answers?: Json | null
+          sms_sent?: boolean | null
+          sms_sent_at?: string | null
           status?: Database["public"]["Enums"]["verification_status"]
           updated_at?: string
         }
@@ -279,6 +384,7 @@ export type Database = {
           additional_proof_urls?: string[] | null
           admin_notes?: string | null
           claimant_id?: string
+          claimant_phone?: string | null
           created_at?: string
           id?: string
           identification_marks?: string | null
@@ -286,6 +392,8 @@ export type Database = {
           photo_with_item_urls?: string[] | null
           purchase_proof_url?: string | null
           security_answers?: Json | null
+          sms_sent?: boolean | null
+          sms_sent_at?: string | null
           status?: Database["public"]["Enums"]["verification_status"]
           updated_at?: string
         }
@@ -320,6 +428,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_admin: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
     }

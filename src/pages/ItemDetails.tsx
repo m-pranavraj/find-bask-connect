@@ -42,6 +42,7 @@ const ItemDetails = () => {
   const [purchaseProof, setPurchaseProof] = useState<File | null>(null);
   const [identificationMarks, setIdentificationMarks] = useState("");
   const [photoProof, setPhotoProof] = useState<File[]>([]);
+  const [claimantPhone, setClaimantPhone] = useState("");
   const [securityAnswers, setSecurityAnswers] = useState({
     purchaseDate: "",
     purchaseLocation: "",
@@ -130,6 +131,7 @@ const ItemDetails = () => {
           identification_marks: identificationMarks,
           photo_with_item_urls: photoUrls,
           security_answers: securityAnswers,
+          claimant_phone: claimantPhone,
           status: 'pending'
         });
 
@@ -355,6 +357,17 @@ const ItemDetails = () => {
                           accept="image/*"
                           multiple
                           onChange={(e) => setPhotoProof(Array.from(e.target.files || []))}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Your Phone Number (for SMS notification) *</Label>
+                        <Input
+                          type="tel"
+                          placeholder="+91 1234567890"
+                          value={claimantPhone}
+                          onChange={(e) => setClaimantPhone(e.target.value)}
+                          required
                         />
                       </div>
 

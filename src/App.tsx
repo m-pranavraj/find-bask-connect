@@ -12,6 +12,8 @@ import Admin from "./pages/Admin";
 import HowItWorks from "./pages/HowItWorks";
 import SuccessStories from "./pages/SuccessStories";
 import ItemDetails from "./pages/ItemDetails";
+import MyFinds from "./pages/MyFinds";
+import Organizations from "./pages/Organizations";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -31,6 +33,8 @@ const App = () => (
             <Route path="/post-item" element={<PostItem />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/my-finds" element={<MyFinds />} />
+            <Route path="/organizations" element={<Organizations />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/success-stories" element={<SuccessStories />} />
             <Route path="/item/:id" element={<ItemDetails />} />
