@@ -59,14 +59,30 @@ const MyFinds = () => {
 
   const loadVerificationRequests = async () => {
     try {
+      // First get all items found by the current user
+      const { data: userItems, error: itemsError } = await supabase
+        .from('items')
+        .select('id')
+        .eq('finder_id', user?.id);
+
+      if (itemsError) throw itemsError;
+
+      const itemIds = userItems?.map(item => item.id) || [];
+
+      if (itemIds.length === 0) {
+        setVerificationRequests([]);
+        return;
+      }
+
+      // Then get verification requests for those items
       const { data, error } = await supabase
         .from('verification_requests')
         .select(`
           *,
-          items(id, title, image_urls, category),
+          items!inner(id, title, image_urls, category, finder_id),
           profiles!verification_requests_claimant_id_fkey(full_name, phone)
         `)
-        .eq('items.finder_id', user?.id)
+        .in('item_id', itemIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
