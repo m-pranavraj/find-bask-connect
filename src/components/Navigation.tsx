@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, LogIn, UserPlus, Moon, Sun, LogOut, Shield } from "lucide-react";
+import { Search, LogIn, UserPlus, Moon, Sun, LogOut, Shield, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -98,6 +98,12 @@ const Navigation = () => {
                   <Button variant="outline" className="gap-2">
                     <Search className="h-4 w-4" />
                     <span className="hidden sm:inline">My Finds</span>
+                  </Button>
+                </Link>
+                <Link to="/my-claims">
+                  <Button variant="outline" className="gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="hidden sm:inline">My Claims</span>
                   </Button>
                 </Link>
                 {isAdmin && (
