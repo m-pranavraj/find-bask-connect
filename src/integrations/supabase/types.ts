@@ -419,15 +419,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      delete_expired_items: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      delete_expired_items: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_finder_in_org: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       is_org_admin: {
