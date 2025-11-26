@@ -13,6 +13,7 @@ import HowItWorks from "./pages/HowItWorks";
 import SuccessStories from "./pages/SuccessStories";
 import ItemDetails from "./pages/ItemDetails";
 import MyFinds from "./pages/MyFinds";
+import MyClaims from "./pages/MyClaims";
 import Organizations from "./pages/Organizations";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/my-finds" element={<MyFinds />} />
+            <Route path="/my-claims" element={<MyClaims />} />
             <Route path="/organizations" element={<Organizations />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/success-stories" element={<SuccessStories />} />
