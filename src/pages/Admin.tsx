@@ -1,15 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealtimeSubscription } from '@/hooks/useRealtimeSubscription';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Trash2, Eye, CheckCircle, XCircle, Package, Users, MessageSquare, Shield } from 'lucide-react';
+import { Trash2, Eye, CheckCircle, XCircle, Package, Users, Shield, Building2, RefreshCw, UserPlus } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -28,6 +30,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const Admin = () => {
   const { user, isAdmin, loading } = useAuth();
@@ -35,28 +53,14 @@ const Admin = () => {
   const [items, setItems] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [verifications, setVerifications] = useState<any[]>([]);
-  const [stats, setStats] = useState({ totalItems: 0, totalUsers: 0, pendingVerifications: 0 });
+  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [stats, setStats] = useState({ totalItems: 0, totalUsers: 0, pendingVerifications: 0, pendingOrgs: 0 });
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [addAdminDialog, setAddAdminDialog] = useState<{ open: boolean; orgId: string | null }>({ open: false, orgId: null });
+  const [selectedUserId, setSelectedUserId] = useState<string>('');
 
-  useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to access this page.",
-        variant: "destructive"
-      });
-      navigate('/');
-    }
-  }, [user, isAdmin, loading, navigate]);
-
-  useEffect(() => {
-    if (user && isAdmin) {
-      loadAdminData();
-    }
-  }, [user, isAdmin]);
-
-  const loadAdminData = async () => {
+  const loadAdminData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Load items
@@ -86,11 +90,21 @@ const Admin = () => {
       if (verificationsError) throw verificationsError;
       setVerifications(verificationsData || []);
 
+      // Load organizations (all, including pending)
+      const { data: orgsData, error: orgsError } = await supabase
+        .from('organizations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (orgsError) throw orgsError;
+      setOrganizations(orgsData || []);
+
       // Update stats
       setStats({
         totalItems: itemsData?.length || 0,
         totalUsers: usersData?.length || 0,
-        pendingVerifications: verificationsData?.filter(v => v.status === 'pending').length || 0
+        pendingVerifications: verificationsData?.filter(v => v.status === 'pending').length || 0,
+        pendingOrgs: orgsData?.filter(o => !o.is_verified).length || 0
       });
     } catch (error: any) {
       toast({
@@ -101,7 +115,43 @@ const Admin = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!loading && (!user || !isAdmin)) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page.",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [user, isAdmin, loading, navigate]);
+
+  useEffect(() => {
+    if (user && isAdmin) {
+      loadAdminData();
+    }
+  }, [user, isAdmin, loadAdminData]);
+
+  // Real-time subscriptions
+  useRealtimeSubscription({
+    table: 'items',
+    enabled: isAdmin,
+    onChange: () => loadAdminData(),
+  });
+
+  useRealtimeSubscription({
+    table: 'verification_requests',
+    enabled: isAdmin,
+    onChange: () => loadAdminData(),
+  });
+
+  useRealtimeSubscription({
+    table: 'organizations',
+    enabled: isAdmin,
+    onChange: () => loadAdminData(),
+  });
 
   const handleDeleteItem = async () => {
     if (!deleteItemId) return;
@@ -155,8 +205,62 @@ const Admin = () => {
     }
   };
 
+  const handleOrgVerification = async (orgId: string, verified: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ is_verified: verified, is_active: verified })
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      toast({
+        title: verified ? "Organization verified" : "Organization rejected",
+        description: verified ? "The organization is now active." : "The organization has been rejected.",
+      });
+
+      loadAdminData();
+    } catch (error: any) {
+      toast({
+        title: "Error updating organization",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddOrgAdmin = async () => {
+    if (!addAdminDialog.orgId || !selectedUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from('organization_admins')
+        .insert({
+          organization_id: addAdminDialog.orgId,
+          user_id: selectedUserId,
+          role: 'admin'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Admin added",
+        description: "The user is now an admin for this organization.",
+      });
+
+      setAddAdminDialog({ open: false, orgId: null });
+      setSelectedUserId('');
+    } catch (error: any) {
+      toast({
+        title: "Error adding admin",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, any> = {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
       available: 'default',
       claimed: 'secondary',
       returned: 'outline',
@@ -186,13 +290,19 @@ const Admin = () => {
       
       <main className="flex-grow pt-24 pb-12">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage your Find & Bask platform</p>
+          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+              <p className="text-muted-foreground">Manage your Lost & Found platform</p>
+            </div>
+            <Button onClick={() => loadAdminData()} variant="outline" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Items</CardTitle>
@@ -222,6 +332,16 @@ const Admin = () => {
                 <div className="text-2xl font-bold">{stats.pendingVerifications}</div>
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Organizations</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingOrgs}</div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Management Tabs */}
@@ -230,6 +350,7 @@ const Admin = () => {
               <TabsTrigger value="items">Items</TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
               <TabsTrigger value="verifications">Verifications</TabsTrigger>
+              <TabsTrigger value="organizations">Organizations</TabsTrigger>
             </TabsList>
 
             <TabsContent value="items" className="space-y-4">
@@ -298,7 +419,6 @@ const Admin = () => {
                       <TableRow>
                         <TableHead>Name</TableHead>
                         <TableHead>Phone</TableHead>
-                        <TableHead>Role</TableHead>
                         <TableHead>Items Found</TableHead>
                         <TableHead>Items Claimed</TableHead>
                         <TableHead>Reputation</TableHead>
@@ -310,7 +430,6 @@ const Admin = () => {
                         <TableRow key={user.id}>
                           <TableCell className="font-medium">{user.full_name}</TableCell>
                           <TableCell>{user.phone || 'N/A'}</TableCell>
-                          <TableCell>{getStatusBadge(user.role)}</TableCell>
                           <TableCell>{user.items_found}</TableCell>
                           <TableCell>{user.items_claimed}</TableCell>
                           <TableCell>{user.reputation_score}</TableCell>
@@ -376,6 +495,98 @@ const Admin = () => {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            <TabsContent value="organizations" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Manage Organizations</CardTitle>
+                  <CardDescription>Approve organizations and assign admins</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>City</TableHead>
+                        <TableHead>Contact</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Registered</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {organizations.map((org) => (
+                        <TableRow key={org.id}>
+                          <TableCell className="font-medium">{org.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{org.type}</Badge>
+                          </TableCell>
+                          <TableCell>{org.city}</TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <p>{org.contact_email}</p>
+                              <p className="text-muted-foreground">{org.contact_phone}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {org.is_verified ? (
+                              <Badge className="bg-green-500">Verified</Badge>
+                            ) : (
+                              <Badge variant="secondary">Pending</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{new Date(org.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2 flex-wrap">
+                              {!org.is_verified ? (
+                                <>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => handleOrgVerification(org.id, true)}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleOrgVerification(org.id, false)}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => navigate(`/org-admin/${org.id}`)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setAddAdminDialog({ open: true, orgId: org.id })}
+                                  >
+                                    <UserPlus className="h-4 w-4 mr-1" />
+                                    Add Admin
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -396,6 +607,43 @@ const Admin = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Add Admin Dialog */}
+      <Dialog open={addAdminDialog.open} onOpenChange={(open) => setAddAdminDialog({ open, orgId: open ? addAdminDialog.orgId : null })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Organization Admin</DialogTitle>
+            <DialogDescription>
+              Select a user to make them an admin for this organization.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Select User</Label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.full_name} {u.phone ? `(${u.phone})` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddAdminDialog({ open: false, orgId: null })}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddOrgAdmin} disabled={!selectedUserId}>
+              Add Admin
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
