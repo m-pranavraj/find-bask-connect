@@ -15,6 +15,7 @@ import ItemDetails from "./pages/ItemDetails";
 import MyFinds from "./pages/MyFinds";
 import MyClaims from "./pages/MyClaims";
 import Organizations from "./pages/Organizations";
+import OrgAdmin from "./pages/OrgAdmin";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/my-finds" element={<MyFinds />} />
             <Route path="/my-claims" element={<MyClaims />} />
             <Route path="/organizations" element={<Organizations />} />
+            <Route path="/org-admin/:orgId" element={<OrgAdmin />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/success-stories" element={<SuccessStories />} />
             <Route path="/item/:id" element={<ItemDetails />} />

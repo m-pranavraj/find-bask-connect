@@ -269,13 +269,23 @@ const Organizations = () => {
                   </div>
                 </div>
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => navigate(`/search?org=${org.id}`)}
-                >
-                  View Items
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => navigate(`/search?org=${org.id}`)}
+                  >
+                    View Items
+                  </Button>
+                  {org.is_verified && (
+                    <Button
+                      variant="default"
+                      onClick={() => navigate(`/org-admin/${org.id}`)}
+                    >
+                      Admin
+                    </Button>
+                  )}
+                </div>
               </Card>
             ))}
           </div>

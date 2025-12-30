@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -14,10 +14,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CheckCircle, XCircle, Eye, MessageSquare } from "lucide-react";
+import { CheckCircle, XCircle, Eye, MessageSquare, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 const MyFinds = () => {
   const { user, loading } = useAuth();
@@ -38,7 +39,7 @@ const MyFinds = () => {
     }
   }, [user, loading]);
 
-  const loadMyFinds = async () => {
+  const loadMyFinds = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('items')
@@ -55,7 +56,21 @@ const MyFinds = () => {
         variant: "destructive"
       });
     }
-  };
+  }, [user, toast]);
+
+  // Real-time subscriptions
+  useRealtimeSubscription({
+    table: 'items',
+    filter: `finder_id=eq.${user?.id}`,
+    enabled: !!user,
+    onChange: () => loadMyFinds(),
+  });
+
+  useRealtimeSubscription({
+    table: 'verification_requests',
+    enabled: !!user,
+    onChange: () => loadVerificationRequests(),
+  });
 
   const loadVerificationRequests = async () => {
     try {
